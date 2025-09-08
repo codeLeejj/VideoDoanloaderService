@@ -8,7 +8,6 @@ services:
       - FLASK_ENV=production
       - PORT=5000
       - FFMPEG_BINARY=/usr/bin/ffmpeg
-      - FFPROBE_BINARY=/usr/bin/ffprobe
     restart: unless-stopped
     volumes:
       - ./logs:/app/logs

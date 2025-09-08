@@ -8,8 +8,8 @@ COPY app.py .
 COPY AddressHandler.py .
 
 COPY /bin/ffmpeg ../usr/bin/ffmpeg
-COPY /bin/ffprobe ../usr/bin/ffprobe
-COPY /bin/ffplay ../usr/bin/ffplay
+#COPY /bin/ffprobe ../usr/bin/ffprobe
+#COPY /bin/ffplay ../usr/bin/ffplay
 
 
 RUN pip install --no-cache-dir -r requirements.txt
