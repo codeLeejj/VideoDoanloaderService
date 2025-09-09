@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video-DL</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            font-family: 'Arial', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 8px;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            flex: 1; /* 关键属性：填充剩余空间 */
+            display: flex;
+            flex-direction: column;
+            min-height: 800px;
+            background-color: white;
+            padding: 16px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .flex-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            align-items: center;
+        }
+
+        .flex-container input {
+            flex: 1; /* 关键属性：填充剩余空间 */
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+
+        .flex-container button {
+            padding: 12px 20px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .bottom button {
+            padding: 12px 20px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>网页应用示例</h1>
+    <p>支持yt-dlp所支持的数据源.</p>
+
+    <div class="flex-container">
+        <input type="text" id="urlInput" placeholder="please input the address of video.">
+    </div>
+
+    <div class="flex-container">
+        <button class="btn" onclick="query()">获取</button>
+        <button class="btn" onclick="downloadBest()">下载最优</button>
+        <button class="btn" id="btDownload" onclick="download()" style="visibility: hidden;">下载</button>
+    </div>
+
+    <div id="queryResult"></div>
+</div>
+
+<script>
+    // document.getElementById('urlInput').value = "https://www.youtube.com/watch?v=QJkJMKqukwo";
+
+    function showQueryResult(data) {
+        const title = data["title"];
+        const formats = data["formats"];
+        const prettyJson = JSON.stringify(data, null, 2);
+        console.log(prettyJson)
+
+        let mHeader = `
+            <div style="margin-bottom: 20px;">
+                <h4><i class="fas fa-film"></i> 视频标题: ${title}</h4>
+            </div>
+        `;
+
+        let fromHeader =
+            `<div style="overflow-y: auto;">
+             <table style="width: 100%; border-collapse: collapse;">\
+                <tr style="background-color: #f0f0f0;">
+                    <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">格式</th>
+                    <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">分辨率</th>
+                    <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">编码</th>
+                    <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">文件大小</th>
+                    <th style="border: 1px solid #ddd; text-align: center;min-width:55px">请选择</th>
+                </tr>
+            `
+
+        let videoForm = fromHeader
+        let audioForm = fromHeader
+        let mBody = ""
+        if (formats.length > 0) {
+            let videoChecked = false, audioChecked = false
+            formats.forEach(format => {
+                let isVideo = format["resolution"].toString().indexOf("audio") === -1
+                let mId = format["id"]
+                let checkBox = ""
+                let decode = ""
+                if (isVideo) {
+                    if (videoChecked) {
+                        checkBox = `<input type="radio" name="video" value="${mId}" class="video-radio">`
+                    } else {
+                        checkBox = `<input type="radio" name="video" value="${mId}" class="video-radio" checked>`
+                        videoChecked = true
+                    }
+                    decode = format["vcodec"]
+                } else {
+                    if (audioChecked) {
+                        checkBox = `<input type="radio"  name="audio" value="${mId}" class="audio-radio">`
+                    } else {
+                        checkBox = `<input type="radio"  name="audio" value="${mId}" class="audio-radio" checked>`
+                        audioChecked = true
+                    }
+                    decode = format["acodec"]
+                }
+
+                let item = `
+                    <tr>
+                        <td style="padding: 8px; border: 1px solid #ddd;">${format["ext"]}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">${format["resolution"]}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">${decode}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">${format["size_str"]}</td>
+<!--                        <td style="padding: 8px; border: 1px solid #ddd;">${checkBox}</td>-->
+                        <td style="border: 1px solid #ddd;text-align: center;min-width:55px">` + checkBox +
+                    `</td>
+                    </tr>
+                `;
+                if (isVideo) {
+                    videoForm += item;
+                } else {
+                    audioForm += item;
+                }
+            });
+
+            videoForm += `</table></div>`;
+            audioForm += `</table></div>`;
+            mBody =
+                `<h4><i class="fas fa-list-alt"></i> 视频:</h4>` +
+                videoForm +
+                `<h4><i class="fas fa-list-alt"></i> 音频:</h4>` +
+                audioForm;
+
+            document.getElementById("btDownload").style.visibility = "visible"
+        } else {
+            mBody += `<p><i class="fas fa-exclamation-triangle"></i> 未找到可用格式</p>`;
+        }
+        document.getElementById('queryResult').innerHTML = mHeader + mBody
+    }
+
+    function query() {
+        const urlData = document.getElementById('urlInput').value;
+        fetch('/query', {
+            method: 'POST',
+            // headers: {
+            //     'Content-Type': 'multipart/form-data',
+            // },
+            //注意：不要设置Content-Type头，浏览器会自动设置正确的multipart/form-data格式
+            // body: {url: urlData}
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({url: urlData})
+        })
+            .then(response => response.json())
+            .then(data => {
+                showQueryResult(data)
+            });
+    }
+
+    function downloadBest() {
+        const urlData = document.getElementById('urlInput').value;
+        fetch('/process_data', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({url: urlData, param: "best"})
+        })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('dataResult').innerHTML =
+                    `<strong>${data.result}</strong>`;
+            });
+    }
+
+    function download() {
+        const urlData = document.getElementById('urlInput').value;
+
+        let videoSelections = document.getElementsByClassName("video-radio");
+        let audioSelections = document.getElementsByClassName("audio-radio")
+        let videoId = ""
+        let audioId = ""
+        for (let i = 0; i < videoSelections.length; i++) {
+            if (videoSelections[i].checked) {
+                videoId = videoSelections[i].value
+            }
+        }
+
+        for (let i = 0; i < audioSelections.length; i++) {
+            if (audioSelections[i].checked) {
+                audioId = audioSelections[i].value
+            }
+        }
+        let source = `${videoId}+${audioId}`
+        fetch('/download', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({url: urlData, param: source})
+        })
+            .then(response => response.json())
+            .then(data => {
+                const prettyJson = JSON.stringify(data, null, 2);
+                console.log(prettyJson)
+                if(data["code"]===-1){
+
+                }
+                alert(data["message"])
+            });
+    }
+</script>
+</body>
+</html>

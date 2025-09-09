@@ -1,6 +1,6 @@
 import os
 
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 import logging
 from datetime import datetime
 
@@ -14,6 +14,21 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
+###################################### web start ###########################################
+@app.route('/')
+def index():
+    try:
+        path = "index.html"
+        return render_template(path)
+    except Exception as e:
+        logger.error(e)
+        return jsonify({
+                "status": "success",
+                "message": f"参数已接收并打印",
+            }), 400
+
+
+###################################### web end #############################################
 @app.route('/print', methods=['GET', 'POST'])
 def print_param():
     try:
