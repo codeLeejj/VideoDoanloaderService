@@ -29,7 +29,7 @@
         .flex-container {
             display: flex;
             gap: 10px;
-            margin-bottom: 30px;
+            margin-bottom: 12px;
             align-items: center;
         }
 
@@ -58,28 +58,225 @@
             border-radius: 6px;
             cursor: pointer;
         }
+
+        .source_title {
+            margin: 2px;
+            font-size: 16px;
+        }
+
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            width: 100%;
+            text-align: center;
+            padding: 30px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #3498db;
+            margin-bottom: 20px;
+            font-size: 2.5rem;
+        }
+
+        p {
+            color: #555;
+            line-height: 1.6;
+            font-size: 1.1rem;
+        }
+
+        .btn {
+            padding: 14px 28px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(50, 140, 220, 0.2);
+        }
+
+        .btn:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(50, 140, 220, 0.3);
+        }
+
+        /* 模态窗口样式 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 12px;
+            width: 85%;
+            max-width: 700px;
+            max-height: 85vh;
+            overflow: hidden;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+            transform: translateY(50px);
+            transition: transform 0.4s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-overlay.active .modal {
+            transform: translateY(0);
+        }
+
+        .modal-header {
+            padding: 8px;
+            background: #3498db;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.8rem;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .close-btn:hover {
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            padding: 6px;
+            overflow-y: auto;
+            max-height: 60vh;
+            text-align: left;
+        }
+
     </style>
 </head>
 <body>
 <div class="container">
-    <h1>网页应用示例</h1>
-    <p>支持yt-dlp所支持的数据源.</p>
+    <div style="font-size: 20px;text-align: center">视频下载管理</div>
+    <div class="flex-container">
+        <p>支持yt-dlp所支持的数据源.</p>
+        <button style="margin: 0;padding: 0 6px" onclick="showModal('iframe')">帮助文档</button>
+    </div>
 
     <div class="flex-container">
         <input type="text" id="urlInput" placeholder="please input the address of video.">
     </div>
-
     <div class="flex-container">
         <button class="btn" onclick="query()">获取</button>
         <button class="btn" onclick="downloadBest()">下载最优</button>
-        <button class="btn" id="btDownload" onclick="download()" style="visibility: hidden;">下载</button>
+        <button class="btn" style="visibility: hidden" id="bt_download" onclick="download()">下载选择项</button>
     </div>
 
     <div id="queryResult"></div>
+
+</div>
+
+<!-- 模态窗口 -->
+<div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+        <div class="modal-header">
+            <h2 class="modal-title" id="modalTitle">使用说明</h2>
+            <button class="close-btn" onclick="closeModal()">&times;</button>
+        </div>
+        <div class="modal-content" id="modalContent">
+            <div id="contentContainer"></div>
+        </div>
+    </div>
 </div>
 
 <script>
-    // document.getElementById('urlInput').value = "https://www.youtube.com/watch?v=QJkJMKqukwo";
+    // 显示模态窗口
+    function showModal(method) {
+        const overlay = document.getElementById('modalOverlay');
+        const contentContainer = document.getElementById('contentContainer');
+
+        // 显示加载指示器
+        contentContainer.innerHTML = '';
+
+        // 显示模态窗口
+        overlay.classList.add('active');
+
+
+        // 根据选择的方法加载内容
+        if (method === 'iframe') {
+            // 使用iframe加载
+            contentContainer.innerHTML = `
+                        <iframe src="doc" width="100%" height="400"
+                            style="border: none; border-radius: 8px;"
+                            onload="this.style.height = this.contentWindow.document.body.scrollHeight + 'px'">
+                        </iframe>
+                    `;
+        }
+    }
+
+    // 关闭模态窗口
+    function closeModal() {
+        const overlay = document.getElementById('modalOverlay');
+        overlay.classList.remove('active');
+    }
+
+    // 点击模态窗口外部关闭
+    document.getElementById('modalOverlay').addEventListener('click', function (e) {
+        if (e.target === this) {
+            closeModal();
+        }
+    });
+
+    // ESC键关闭模态窗口
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+            closeModal();
+        }
+    });
 
     function showQueryResult(data) {
         const title = data["title"];
@@ -88,9 +285,7 @@
         console.log(prettyJson)
 
         let mHeader = `
-            <div style="margin-bottom: 20px;">
-                <h4><i class="fas fa-film"></i> 视频标题: ${title}</h4>
-            </div>
+            <div style="margin-bottom: 8px;font-size: 18px;"><strong>${title}</strong></div>
         `;
 
         let fromHeader =
@@ -154,12 +349,12 @@
             videoForm += `</table></div>`;
             audioForm += `</table></div>`;
             mBody =
-                `<h4><i class="fas fa-list-alt"></i> 视频:</h4>` +
+                `<div class="source_title">视频:</div>` +
                 videoForm +
-                `<h4><i class="fas fa-list-alt"></i> 音频:</h4>` +
+                `<div  class="source_title">音频:</div>` +
                 audioForm;
 
-            document.getElementById("btDownload").style.visibility = "visible"
+            document.getElementById("bt_download").style.visibility = "visible"
         } else {
             mBody += `<p><i class="fas fa-exclamation-triangle"></i> 未找到可用格式</p>`;
         }
@@ -167,7 +362,8 @@
     }
 
     function query() {
-        const urlData = document.getElementById('urlInput').value;
+        let urlData = document.getElementById('urlInput').value;
+        // urlData = "https://www.youtube.com/watch?v=QJkJMKqukwo";
         fetch('/query', {
             method: 'POST',
             // headers: {
@@ -188,7 +384,7 @@
 
     function downloadBest() {
         const urlData = document.getElementById('urlInput').value;
-        fetch('/process_data', {
+        fetch('/download', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -232,7 +428,7 @@
             .then(data => {
                 const prettyJson = JSON.stringify(data, null, 2);
                 console.log(prettyJson)
-                if(data["code"]===-1){
+                if (data["code"] === -1) {
 
                 }
                 alert(data["message"])

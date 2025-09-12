@@ -1,0 +1,32 @@
+<head>
+    <style>
+        .APIDescription {
+            border-radius: 5px;
+            border: 1px solid black;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin: 6px;
+        }
+    </style>
+</head>
+<div class="container">
+    <strong>端口说明</strong><br>
+    目前容器内只有5000这一个端口<br>
+
+    <strong>网页访问</strong><br>
+    ip:端口<br>
+
+    <strong>接口访问</strong><br>
+    接口支持GET/POST(表单或JSON)访问
+    <div class="APIDescription">
+        <strong>查询接口:</strong> query<br>
+        <strong>url</strong>:视频播放的网页地址
+    </div>
+    <div class="APIDescription">
+        <strong>下载接口:</strong>download<br>
+        <strong>url:</strong>视频播放的网页地址<br>
+        <strong>param:</strong>'{视频id}+{音频id}' or best ,更多方式请看yt-dlp官方文档
+    </div>
+</div>
+
+<script>
+</script>

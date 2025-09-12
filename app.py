@@ -23,9 +23,15 @@ def index():
     except Exception as e:
         logger.error(e)
         return jsonify({
-                "status": "success",
-                "message": f"参数已接收并打印",
-            }), 400
+            "status": "success",
+            "message": f"参数已接收并打印",
+        }), 400
+
+
+@app.route('/doc')
+def doc():
+    path = "doc.html"
+    return render_template(path)
 
 
 ###################################### web end #############################################
